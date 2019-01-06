@@ -1,25 +1,136 @@
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.ObjectInput;
-import java.io.ObjectInputStream;
-import java.net.DatagramPacket;
-import java.net.InetAddress;
-import java.net.MulticastSocket;
+import java.io.*;
+import java.net.*;
 import java.util.ArrayList;
 
 public class Servidor {
 
+
+    // Variables for IP MultiCast
+    Mensaje mensajeActual = null;
+    InetAddress group = InetAddress.getByName("225.4.5.6");
     ArrayList<Mensaje> msgsDelivered = new ArrayList<Mensaje>();
     ArrayList<Mensaje> msgs_hold_back_queue = new ArrayList<Mensaje>();
     ArrayList<Integer> listaprueba = new ArrayList<Integer>();
-    Request request = new Request(5);
+    ArrayList<Mensaje> msgInDataBase = new ArrayList<Mensaje>();
+    //
+    //Request request = new Request(5);
+    //
     Integer RIndex = 0;
+    //
+    //Variables for socket tranference
+    boolean request_needed = false;
+    ServerSocket serverSocketCommunication; //For Messages
+    ServerSocket serverSocketRequest; //For Requests
+    //
 
-    public void receiver(){
+    public Servidor() throws IOException {
+        Mensaje msg = new Mensaje("helloooo mensaje", 1);
+        Mensaje msg2 = new Mensaje("helloooo mensaje 2 ", 2);
+        Mensaje msg3 = new Mensaje("helloooo mensaje", 3);
+        Mensaje msg4 = new Mensaje("helloooo mensaje 2 ", 4);
+        Mensaje msg5= new Mensaje("helloooo mensaje", 5);
+        Mensaje msg6 = new Mensaje("helloooo mensaje 2 ", 6);
+        Mensaje msg7= new Mensaje("helloooo mensaje", 7);
+        Mensaje msg8 = new Mensaje("helloooo mensaje 2 ", 8);
 
+        msgInDataBase.add(msg);
+        msgInDataBase.add(msg2);
+        msgInDataBase.add(msg3);
+        msgInDataBase.add(msg4);
+        msgInDataBase.add(msg5);
+        msgInDataBase.add(msg6);
+        msgInDataBase.add(msg7);
+        msgInDataBase.add(msg8);
+
+
+        Thread nuevaThread = new Thread(new Runnable(){
+            public void run(){
+                try {
+                    receiveFromGroupRequest();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                } catch (ClassNotFoundException e) {
+                    e.printStackTrace();
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+
+        });
+
+        nuevaThread.start();
+    }
+
+
+    public void sendToServer(){
+
+    }
+
+    public void sendToGroup(byte[] yourBytes){
+        try {
+            InetAddress group = InetAddress.getByName("225.4.5.6");
+            MulticastSocket multicastSock = new MulticastSocket();
+
+            //byte[] yourBytes = (byte[]) msg.getInSendingForm();
+
+            DatagramPacket packet = new DatagramPacket(yourBytes, yourBytes.length, group, 3456);
+
+            multicastSock.send(packet);
+            multicastSock.close();
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void receiveFromGroup() throws IOException, ClassNotFoundException, InterruptedException {
+        for(int i=0;i<100;i++){
+            this.serverSocketCommunication= new ServerSocket(8001);
+            System.out.println("El Servidor se esta ejecutando -- Esperando respuesta...\n");
+            Socket socketCommunication = serverSocketCommunication.accept();
+            ObjectInputStream objectInputStream = new ObjectInputStream(socketCommunication.getInputStream());
+            Mensaje mensaje = (Mensaje) objectInputStream.readObject();
+            socketCommunication.close();
+            mensaje.setId(mensaje.getId()+1);
+            byte[] yourbytes= mensaje.getInSendingForm();
+            this.sendToGroup(yourbytes);
+            Thread.sleep(1000);
+        }
+    }
+
+    public void receiveFromGroupRequest() throws IOException, ClassNotFoundException, InterruptedException {
+        this.serverSocketRequest= new ServerSocket(8001);
+        System.out.println("Poooooort used wawa: " + serverSocketRequest.getLocalPort());
+        for(int p=0;p<2;p++){
+            System.out.println("El Servidor se esta ejecutando -- Esperando respuesta...\n");
+            Socket socketRequest = serverSocketRequest.accept();
+            ObjectInputStream objectInputStream = new ObjectInputStream(socketRequest.getInputStream());
+            ArrayList acks = (ArrayList) objectInputStream.readObject();
+            socketRequest.close();
+            System.out.println("acks size: " + acks.size());
+            //System.out.println("holaaaaa 3333333");
+            for(int i = 0; i<acks.size();i++){
+                //System.out.println("holaaaaa 5");
+                for(int j = 0;j<this.msgInDataBase.size();j++){
+                    //System.out.println("holaaaaa 6");
+                    if((msgInDataBase.get(j).getId()).equals(acks.get(i))){
+                        //System.out.println("holaaaaa 7");
+                        System.out.println(msgInDataBase.get(j));
+                        Thread.sleep(2000); //If you take this sleep out the, just one message is send out
+                        this.sendToGroup(msgInDataBase.get(j).getInSendingForm());
+                    }
+                }
+            }
+            //System.out.println("holaaaaa 4444444444444");
+            //Thread.sleep(1000);
+       }
+    }
+
+    public void receiverFromServer(){
+        /*
 
         try{
-            InetAddress group = InetAddress.getByName("225.4.5.6");
+
 
             while(true){
 
@@ -34,7 +145,7 @@ public class Servidor {
 
                 //this set of code turns a incoming set of bytes to its corresponding object, **Check wether you have to set o to Object instead
                 //of Mensaje as by now I don't know  how the application will be tested
-                Mensaje mensajeActual = null;
+
                 ByteArrayInputStream bis = new ByteArrayInputStream(buffer);
                 ObjectInput in = null;
                 try {
@@ -60,7 +171,7 @@ public class Servidor {
                     }
                 }
 
-                // Si se puede recibir se entrega
+                // Si se puede entregar se califica segun su id y segun RIndex
                 if(flag==0){
                     // Check if even if it is not delivered there should be a received form of storage
                     if(mensajeActual.getId()==RIndex+1){
@@ -80,11 +191,48 @@ public class Servidor {
                     }else if(mensajeActual.getId()<=RIndex){
                         System.out.println("Se ignora el mensaje");
                     }else if(mensajeActual.getId()>RIndex+1){
+                        this.request_needed = true;
                         System.out.println("Se debe ponerlo en la hold back queue");
                         msgs_hold_back_queue.add(mensajeActual);
-                        request.start();
-                        Thread.sleep(6000);
-                        request.numero=15;
+
+                        Thread threadNuevo1 = new Thread(new Runnable(){
+                            @Override
+                            public void run() {
+                                synchronized(this){
+                                    while(RIndex!=RIndex+1){
+                                        try {
+                                            System.out.println("El Rindex es: "  +  RIndex);
+                                            wait();
+                                        } catch (InterruptedException e) {
+                                            e.printStackTrace();
+                                        }
+                                    }
+                                    System.out.println("Se entregara el mesnaje con id: " + mensajeActual.getId());
+                                    request_needed=false;
+                                }
+                            }
+                        });
+
+                        Thread threadNuevo2 = new Thread(new Runnable(){
+                            @Override
+                            public void run() {
+                                synchronized(this) {
+                                    for (int i = RIndex + 1; i <= mensajeActual.getId(); i++) {
+                                        try {
+                                            Socket socket = new Socket(host.getHostName(), 8000);
+                                            ObjectOutputStream objectOutputStream = new ObjectOutputStream(socket.getOutputStream());
+                                            objectOutputStream.writeObject(i);
+                                            socket.close();
+                                        } catch (IOException e) {
+                                            e.printStackTrace();
+                                        }
+                                        notify();
+                                    }
+                                }
+                            }
+                        });
+
+
                         //ask if when meesages get requested, the ones that got them should send directly to the ones in need or to everyone. Solved: it should request just to the server not to others participants.
                     }
 
@@ -102,8 +250,10 @@ public class Servidor {
             e.printStackTrace();
         }
 
-
+        */
     }
+
+
 
 
 }

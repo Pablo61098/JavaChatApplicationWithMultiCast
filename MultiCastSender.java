@@ -17,7 +17,7 @@ public class MultiCastSender {
 
             MulticastSocket multicastSock = new MulticastSocket();
 
-            Mensaje msg =  new Mensaje("Hola desde el Sender, como estas ?", 3);
+            Mensaje msg =  new Mensaje("Hola desde el Sender, como estas ?", 9);
 
             //byte[] yourBytes = (byte[]) msg.getInSendingForm();
 

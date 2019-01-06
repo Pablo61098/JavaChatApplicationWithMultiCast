@@ -6,8 +6,6 @@ import java.util.ArrayList;
 
 class MultiCastReceiver {
 
-
-/*
     public static void main(String[] args){
 
         ArrayList<Mensaje> msgsDelivered = new ArrayList<Mensaje>();
@@ -101,5 +99,5 @@ class MultiCastReceiver {
         }
 
     }
-*/
+
 }

@@ -1,12 +1,12 @@
 import java.io.*;
 
-public class Mensaje implements Serializable {
+public class Mensaje implements Serializable, Cloneable {
 
     public String mensaje;
-    public int id;
+    public Integer id;
 
 
-    public Mensaje( String mensaje, int id){
+    public Mensaje( String mensaje, Integer id){
         this.mensaje=mensaje;
         this.id=id;
     }
@@ -15,11 +15,15 @@ public class Mensaje implements Serializable {
         return this.mensaje;
     }
 
+    public void setId(int id) {
+        this.id = id;
+    }
+
     public String toString(){
         return this.mensaje;
     }
 
-    public int getId(){
+    public Integer getId(){
         return this.id;
     }
 
