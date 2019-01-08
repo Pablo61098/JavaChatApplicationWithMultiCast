@@ -1,3 +1,5 @@
+package Modelo;
+
 import java.io.*;
 import java.net.*;
 import java.util.ArrayList;
@@ -7,7 +9,7 @@ public class Servidor {
 
     // Variables for IP MultiCast
     Mensaje mensajeActual = null;
-    InetAddress group = InetAddress.getByName("225.4.5.6");
+    InetAddress group;
     ArrayList<Mensaje> msgsDelivered = new ArrayList<Mensaje>();
     ArrayList<Mensaje> msgs_hold_back_queue = new ArrayList<Mensaje>();
     ArrayList<Integer> listaprueba = new ArrayList<Integer>();
@@ -22,49 +24,18 @@ public class Servidor {
     ServerSocket serverSocketCommunication; //For Messages
     ServerSocket serverSocketRequest; //For Requests
     //
+    ContenedorGrupos ctnGrupos = new ContenedorGrupos();
 
-    public Servidor() throws IOException {
-        Mensaje msg = new Mensaje("helloooo mensaje", 1);
-        Mensaje msg2 = new Mensaje("helloooo mensaje 2 ", 2);
-        Mensaje msg3 = new Mensaje("helloooo mensaje", 3);
-        Mensaje msg4 = new Mensaje("helloooo mensaje 2 ", 4);
-        Mensaje msg5= new Mensaje("helloooo mensaje", 5);
-        Mensaje msg6 = new Mensaje("helloooo mensaje 2 ", 6);
-        Mensaje msg7= new Mensaje("helloooo mensaje", 7);
-        Mensaje msg8 = new Mensaje("helloooo mensaje 2 ", 8);
+    
 
-        msgInDataBase.add(msg);
-        msgInDataBase.add(msg2);
-        msgInDataBase.add(msg3);
-        msgInDataBase.add(msg4);
-        msgInDataBase.add(msg5);
-        msgInDataBase.add(msg6);
-        msgInDataBase.add(msg7);
-        msgInDataBase.add(msg8);
-
-
-        Thread nuevaThread = new Thread(new Runnable(){
-            public void run(){
-                try {
-                    receiveFromGroupRequest();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                } catch (ClassNotFoundException e) {
-                    e.printStackTrace();
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-            }
-
-        });
-
-        nuevaThread.start();
+    public Servidor(String IPMultiCast) throws IOException {
+        InetAddress group = InetAddress.getByName(IPMultiCast);
     }
-
 
     public void sendToServer(){
 
     }
+
 
     public void sendToGroup(byte[] yourBytes){
         try {
@@ -253,7 +224,15 @@ public class Servidor {
         */
     }
 
-
-
+    public InetAddress getGroup() {
+        return group;
+    }
+    
+    public ContenedorGrupos getCtnGrupos() {
+        return ctnGrupos;
+    }
 
 }
+
+
+// a good IPMUltiCast = "225.4.5.6"

@@ -1,12 +1,14 @@
+package Modelo;
+
 import java.io.*;
 
 public class Mensaje implements Serializable, Cloneable {
 
     public String mensaje;
-    public Integer id;
+    public int id;
 
 
-    public Mensaje( String mensaje, Integer id){
+    public Mensaje( String mensaje, int id){
         this.mensaje=mensaje;
         this.id=id;
     }
@@ -23,7 +25,7 @@ public class Mensaje implements Serializable, Cloneable {
         return this.mensaje;
     }
 
-    public Integer getId(){
+    public int getId(){
         return this.id;
     }
 

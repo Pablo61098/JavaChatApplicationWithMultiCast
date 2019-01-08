@@ -1,16 +1,19 @@
+package Modelo;
 import java.io.*;
 import java.net.*;
 import java.util.ArrayList;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import java.util.Random;
 
 public class Participante {
 
 
     // Variables for IP MultiCast
-    Mensaje mensajeActual = null;
-    InetAddress group = InetAddress.getByName("225.4.5.6");
+    Mensaje mensajeActual;
+    InetAddress group;
     ArrayList<Mensaje> msgsDelivered = new ArrayList<Mensaje>();
     ArrayList<Mensaje> msgs_hold_back_queue = new ArrayList<Mensaje>();
-    ArrayList<Integer> listaprueba = new ArrayList<Integer>();
     //
     //Request request = new Request(5);
     //
@@ -18,32 +21,26 @@ public class Participante {
     //
     //Variables for socket tranference
     boolean request_needed = false;
-    InetAddress host = InetAddress.getLocalHost();
-
+    InetAddress host;
+    Integer UniCastPort;
+    Integer MultiCastPort;
     //
-
-
-    private String id;
-    private String name;
-
-    public Participante(String id, String name) throws IOException {
+    private final String id;
+    private final String name;
+    
+    public Participante(String id, String name) throws IOException {// the password would be the id
         this.id = id;
         this.name = name;
-    }
-
-    public String getId() {
-        return this.id;
-    }
-
-    public void sendMessageToServer(){
+        this.host = InetAddress.getLocalHost();
+        /*
+        Random rand= new Random();
+        UniCastPort = rand.nextInt(( 40000- 1030) + 1) + 1030; 
+        */
+        this.UniCastPort = 8000; 
+        System.out.println("Port: " + UniCastPort );
     }
 
     public void receiverFromServers(){
-
-
-    }
-
-    public void receiverFromGroup(){
         try{
             for(int i=0;i<100000;i++){
 
@@ -105,8 +102,8 @@ public class Participante {
                             public void run() {
                                 try {
                                     standForDelivery(indexEntregar,mensajeActual,multicastSock);
-                                } catch (IOException e) {
-                                    e.printStackTrace();
+                                } catch (IOException ex) {
+                                    Logger.getLogger(Participante.class.getName()).log(Level.SEVERE, null, ex);
                                 }
                             }
                         });
@@ -150,6 +147,8 @@ public class Participante {
                 e.printStackTrace();
             }
         }
+        
+        //After the while it needs to send to Server the message that is about to be delivered.
         System.out.println("-------------------------");
         System.out.println("Se entregara el mesnaje con id: " + mensajeActual.getId());
         this.request_needed = false;
@@ -168,7 +167,7 @@ public class Participante {
             //System.out.println("hhh: " + i);
         }
         try {
-            Socket socket = new Socket(host.getHostName(), 8001);
+            Socket socket = new Socket(host.getHostName(), this.UniCastPort);
             System.out.println("Poooooort used: " + socket.getPort());
             ObjectOutputStream objectOutputStream = new ObjectOutputStream(socket.getOutputStream());
             objectOutputStream.writeObject(arrayRequests);
@@ -202,5 +201,48 @@ public class Participante {
         DatagramPacket packet_out = new DatagramPacket(yourBytes, yourBytes.length, group, 3456);
         multicastSock.send(packet_out);
     }
+    
 
+
+//////////////Setters and Getters
+    public void setGroup(InetAddress group) {
+        this.group = group;
+    }
+
+    public void setHost(InetAddress host) {
+        this.host = host;
+    }
+
+    public InetAddress getGroup() {
+        return group;
+    }
+
+    public InetAddress getHost() {
+        return host;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public String getId() {
+        return this.id;
+    }
+    
+    public Integer getUniCastPort() {
+        return UniCastPort;
+    }
+
+    public Integer getMultiCastPort() {
+        return MultiCastPort;
+    }
+
+    public void setMultiCastPort(Integer MultiCastPort) {
+        this.MultiCastPort = MultiCastPort;
+    }
+    
+    public void generateGroup() throws UnknownHostException{ // this method should not return that put that ip to group, the generation needs to be randomic
+        this.group=InetAddress.getByName("225.4.5.6");
+    }
+    
 }
